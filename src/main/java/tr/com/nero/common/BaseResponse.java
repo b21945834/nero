@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 public class BaseResponse<T> {
     private NeroResponseStatus status;
-    private List<String> messages;
+    private List<String> messages = new ArrayList<>();
     private T body;
 
     public BaseResponse() {
@@ -18,19 +18,16 @@ public class BaseResponse<T> {
 
     public BaseResponse(T body) {
         this.body = body;
-        this.messages = new ArrayList<>();
         this.status = NeroResponseStatus.SUCCESS;
     }
 
     public BaseResponse(String message, NeroResponseStatus status){
         this.status = status;
-        this.messages = new ArrayList<>();
         this.messages.add(message);
     }
 
     public BaseResponse(String message){
         this.status = NeroResponseStatus.ERROR;
-        this.messages = new ArrayList<>();
         this.messages.add(message);
     }
 

@@ -1,30 +1,22 @@
 package tr.com.nero.stock;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
-import lombok.Setter;
 import org.springframework.data.jpa.domain.Specification;
-import tr.com.nero.stock.category.CategoryService;
 
 import java.util.List;
 
 public class StockSpecification {
-
-    @Setter
-    private static CategoryService categoryService;
 
     public static Specification<Stock> hasUserId(Long userId) {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("user").get("id"), userId);
     }
 
-    public static Specification<Stock> hasAnyCategory(List<String> categoryNames) {
+    public static Specification<Stock> hasAnyCategory(List<Category> categories) {
         return (root, query, criteriaBuilder) -> {
-            CriteriaBuilder.In<Long> inClause = criteriaBuilder.in(root.get("category").get("id"));
-            for (String name : categoryNames) {
-                Long categoryId = categoryService.getCategoryIdByName(name);
-                if (categoryId != null) {
-                    inClause.value(categoryId);
-                }
+            CriteriaBuilder.In<Category> inClause = criteriaBuilder.in(root.get("category"));
+            for (Category category : categories) {
+                inClause.value(category);
             }
             return inClause;
         };

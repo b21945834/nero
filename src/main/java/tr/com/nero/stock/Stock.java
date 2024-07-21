@@ -1,13 +1,16 @@
 package tr.com.nero.stock;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Digits;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import tr.com.nero.stock.category.Category;
+import tr.com.nero.stock.barcode.Barcode;
 import tr.com.nero.user.User;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -20,14 +23,20 @@ public class Stock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Double price;
+    private BigDecimal price;
     private Integer quantity;
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
+    @Enumerated(EnumType.STRING)
     private Category category;
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
+    private String brand;
+    private BigDecimal discount;
+    private BigDecimal cost;
+    @Digits(integer = 3, fraction = 2)
+    @Column(precision = 5, scale = 2)
+    private BigDecimal vatRate;
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Barcode> barcodes;
 }
