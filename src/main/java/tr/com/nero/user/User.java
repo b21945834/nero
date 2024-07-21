@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import tr.com.nero.stock.Stock;
+
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +30,8 @@ public class User implements UserDetails {
     @Enumerated
     private Role role;
     private LocalDate iDate;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Stock> stocks;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

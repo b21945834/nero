@@ -12,7 +12,7 @@ import tr.com.nero.authentication.ws.schemas.LoginRequest;
 import tr.com.nero.authentication.ws.schemas.RegisterRequest;
 import tr.com.nero.common.BaseResponse;
 import tr.com.nero.common.NeroResponseStatus;
-import tr.com.nero.security.JwtService;
+import tr.com.nero.config.JwtService;
 import tr.com.nero.user.Role;
 import tr.com.nero.user.User;
 import tr.com.nero.user.UserService;

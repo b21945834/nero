@@ -1,4 +1,4 @@
-package tr.com.nero.security;
+package tr.com.nero.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

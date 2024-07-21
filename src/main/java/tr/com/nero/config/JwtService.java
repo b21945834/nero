@@ -1,4 +1,4 @@
-package tr.com.nero.security;
+package tr.com.nero.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
