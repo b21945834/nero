@@ -1,3 +1,4 @@
 FROM openjdk:17
-ADD target/nero-0.0.1-SNAPSHOT.jar
+EXPOSE 8080
+ADD target/nero-app.jar nero-app.jar
 ENTRYPOINT ["java", "-jar", "nero-0.0.1-SNAPSHOT.jar"]

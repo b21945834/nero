@@ -130,6 +130,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<finalName>nero-0.0.1-SNAPSHOT</finalName>
+		<finalName>nero-app</finalName>
 	</build>
 </project>
