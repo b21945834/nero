@@ -30,7 +30,6 @@ pipeline {
             steps {
                 script {
                         bat 'docker stop $(docker ps -q)'
-                    }
                 }
             }
         }
