@@ -53,7 +53,7 @@ pipeline {
         stage('Run Spring Boot Container') {
             steps {
                 script {
-                    bat 'docker network create my-network'
+                    bat 'docker network create my-network || echo "Network already exists"'
 
                     bat 'docker run -d --name redis --network my-network -p 6379:6379 redis'
 
