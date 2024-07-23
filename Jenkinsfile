@@ -51,19 +51,14 @@ pipeline {
                 }
             }
         }
-        stage('Run Redis Container') {
-            steps {
-                script {
-                    echo "Running Redis container"
-                    bat 'docker run -d --name redis -p 6379:6379 redis'
-                }
-            }
-        }
         stage('Run Spring Boot Container') {
             steps {
                 script {
-                    echo "Running Spring Boot container"
-                    bat 'docker run -d --name nero-app -e SPRING_REDIS_HOST=localhost -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
+                    bat 'docker network create my-network'
+
+                    bat 'docker run -d --name redis --network my-network -p 6379:6379 redis'
+
+                    bat 'docker run -d --name nero-app --network my-network -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
                 }
             }
         }
