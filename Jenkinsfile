@@ -31,10 +31,21 @@ pipeline {
                 script {
                     echo "Stopping and removing existing Docker containers"
                     powershell '''
+                        # Stop all running containers
                         $containers = docker ps -q
-                        if ($containers) { docker stop $containers }
+                        if ($containers) {
+                            docker stop $containers
+                        } else {
+                            Write-Output "No containers to stop"
+                        }
+
+                        # Remove all containers
                         $containers = docker ps -a -q
-                        if ($containers) { docker rm $containers }
+                        if ($containers) {
+                            docker rm $containers
+                        } else {
+                            Write-Output "No containers to remove"
+                        }
                     '''
                 }
             }
@@ -43,7 +54,13 @@ pipeline {
             steps {
                 script {
                     echo "Running Redis container"
-                    powershell 'docker run -d --name redis -p 6379:6379 redis || echo "Redis container already running"'
+                    powershell '''
+                        Try {
+                            docker run -d --name redis -p 6379:6379 redis
+                        } Catch {
+                            Write-Output "Redis container already running or error occurred"
+                        }
+                    '''
                 }
             }
         }
@@ -51,7 +68,13 @@ pipeline {
             steps {
                 script {
                     echo "Running Spring Boot container"
-                    powershell 'docker run -d --name nero-app -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest || echo "Spring Boot container already running"'
+                    powershell '''
+                        Try {
+                            docker run -d --name nero-app -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest
+                        } Catch {
+                            Write-Output "Spring Boot container already running or error occurred"
+                        }
+                    '''
                 }
             }
         }
