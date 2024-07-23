@@ -1,6 +1,5 @@
 package tr.com.nero.stock;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -8,9 +7,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,11 +17,10 @@ import tr.com.nero.common.NeroMapper;
 import tr.com.nero.user.User;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
+@SuppressWarnings("unchecked")
 @RestController
 @RequestMapping("/stock")
 @Tag(name = "Stocks", description = "the Stocks Api")
@@ -98,15 +93,15 @@ public class StockController {
             @ApiResponse(responseCode = "200", description = "Başarıyla stoklar listelendi")
     })
     public ResponseEntity<BaseResponse<List<StockDTO>>> getStocks(
-            @Parameter(description = "Stokları filtrelemek için kategori", required = false)
+            @Parameter(description = "Stokları filtrelemek için kategori")
             @RequestParam Optional<String> category,
-            @Parameter(description = "Minimum fiyat", required = false)
+            @Parameter(description = "Minimum fiyat")
             @RequestParam Optional<Double> minPrice,
-            @Parameter(description = "Maksimum fiyat", required = false)
+            @Parameter(description = "Maksimum fiyat")
             @RequestParam Optional<Double> maxPrice,
-            @Parameter(description = "Sayfadaki stok sayısı", example = "10", required = false)
+            @Parameter(description = "Sayfadaki stok sayısı", example = "10")
             @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Getirilecek sayfa numarası", example = "0", required = false)
+            @Parameter(description = "Getirilecek sayfa numarası", example = "0")
             @RequestParam(defaultValue = "0") int page) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
@@ -119,7 +114,6 @@ public class StockController {
                 .userId(user.getId())
                 .build();
         String currentPageKey = "stocks:" + filters.hashCode();
-
         List<StockDTO> cachedStocks = (List<StockDTO>) redisTemplate.opsForValue().get(currentPageKey);
         if (cachedStocks != null) {
             return ResponseEntity.ok(new BaseResponse<>(cachedStocks));

@@ -1,6 +1,5 @@
 package tr.com.nero.stock;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,41 +27,13 @@ public class StockService {
     @Transactional
     public Stock createStock(User user, StockRequest stock) {
         //TODO VALIDATE STOCK
-        List<Barcode> newBarcodes = new ArrayList<>();
-        Stock newStock = Stock.builder()
-                .price(stock.getPrice())
-                .barcodes(newBarcodes)
-                .user(user)
-                .brand(stock.getBrand())
-                .cost(stock.getCost())
-                .discount(stock.getDiscount())
-                .vatRate(stock.getVatRate())
-                .quantity(stock.getQuantity())
-                .category(NeroUtils.convertToCategory(stock.getCategory()))
-                .build();
-        stock.getBarcodes().forEach(barcode -> {
-            newBarcodes.add(new Barcode(barcode, newStock));
-        });
+        Stock newStock = mapFromStockRequest(user, null, stock);
         return stockRepository.save(newStock);
     }
 
     @Transactional
     public Stock update(User user, Long stockId, StockRequest stock) {
-        List<Barcode> barcodes = new ArrayList<>();
-        Stock newStock = Stock.builder()
-                .price(stock.getPrice())
-                .barcodes(barcodes)
-                .user(user)
-                .id(stockId)
-                .vatRate(stock.getVatRate())
-                .cost(stock.getCost())
-                .brand(stock.getBrand())
-                .quantity(stock.getQuantity())
-                .category(NeroUtils.convertToCategory(stock.getCategory()))
-                .build();
-        stock.getBarcodes().forEach(string -> {
-            barcodes.add(new Barcode(string, newStock));
-        });
+        Stock newStock = mapFromStockRequest(user, stockId, stock);
         barcodeService.deleteByStockId(stockId);
         return stockRepository.save(newStock);
     }
@@ -112,5 +83,26 @@ public class StockService {
         Stock stock = optionalStock.get();
         stock.setQuantity(quantity);
         stockRepository.save(stock);
+    }
+
+    private Stock mapFromStockRequest(User user, Long stockId, StockRequest stock) {
+        List<Barcode> barcodes = new ArrayList<>();
+        Stock newStock = Stock.builder()
+                .price(stock.getPrice())
+                .barcodes(barcodes)
+                .user(user)
+                .id(stockId)
+                .vatRate(stock.getVatRate())
+                .discount(stock.getDiscount())
+                .cost(stock.getCost())
+                .title(stock.getTitle())
+                .brand(stock.getBrand())
+                .quantity(stock.getQuantity())
+                .category(NeroUtils.convertToCategory(stock.getCategory()))
+                .build();
+        stock.getBarcodes().forEach(string -> {
+            barcodes.add(new Barcode(string, newStock));
+        });
+        return newStock;
     }
 }
