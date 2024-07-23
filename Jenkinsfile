@@ -63,7 +63,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Spring Boot container"
-                    bat 'docker run -d --name nero-app -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
+                    bat 'docker run -d --name nero-app -e SPRING_REDIS_HOST=localhost -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
                 }
             }
         }
