@@ -4,10 +4,30 @@ pipeline {
         maven "MavenTool"
     }
     stages {
-        stage("Build Maven") {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out code'
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/b21945834/nero']])
+            }
+        }
+        stage('Start PostgreSQL') {
+            steps {
+                script {
+                    echo 'Starting PostgreSQL container'
+                    bat 'docker-compose up -d postgres'
+                    bat '''
+                    echo "Waiting for PostgreSQL to be ready..."
+                    while ! docker exec -it postgres pg_isready -U nero_user; do
+                      echo "PostgreSQL is not ready yet..."
+                      sleep 5
+                    done
+                    '''
+                }
+            }
+        }
+        stage('Build Maven') {
             steps {
                 echo 'Building Maven Project'
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/b21945834/nero']])
                 bat 'mvn clean install'
             }
         }
@@ -29,13 +49,21 @@ pipeline {
                 }
             }
         }
-        stage('Run Docker Compose') {
+        stage('Run Full Docker Compose') {
             steps {
                 script {
-                    echo 'Running Docker Compose'
+                    echo 'Running Full Docker Compose'
                     bat 'docker-compose down || echo "No containers to stop"'
                     bat 'docker-compose up -d'
                 }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                echo 'Stopping Docker Compose'
+                bat 'docker-compose down'
             }
         }
     }
