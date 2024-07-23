@@ -26,14 +26,10 @@ pipeline {
                 }
             }
         }
-        stage('Stop Existing Redis Container') {
+        stage('Stop Existing Containers') {
             steps {
                 script {
-                    def redisContainer = bat(script: 'docker ps -aqf "name=^redis"', returnStdout: true).trim()
-                    if (redisContainer) {
-                        echo "Stopping existing Redis container"
-                        bat "docker stop ${redisContainer}"
-                        bat "docker rm ${redisContainer}"
+                        bat 'docker stop $(docker ps -q)'
                     }
                 }
             }
@@ -43,18 +39,6 @@ pipeline {
                 script {
                     echo "Running Redis container"
                     bat 'docker run -d --name redis -p 6379:6379 redis'
-                }
-            }
-        }
-        stage('Stop Existing Spring Boot Container') {
-            steps {
-                script {
-                    def appContainer = bat(script: 'docker ps -aqf "name=^nero-app"', returnStdout: true).trim()
-                    if (appContainer) {
-                        echo "Stopping existing Redis container"
-                        bat "docker stop ${appContainer}"
-                        bat "docker rm ${appContainer}"
-                    }
                 }
             }
         }
