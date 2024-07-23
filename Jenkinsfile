@@ -8,59 +8,30 @@ pipeline {
             steps {
                 echo 'asdsdadas'
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/b21945834/nero']])
-                powershell 'mvn clean install'
+                bat 'mvn clean install'
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
-                    powershell 'docker build -t kadiraydogan/nero .'
+                    bat 'docker build -t kadiraydogan/nero .'
                 }
             }
         }
         stage('Push Docker Image') {
             steps {
                 script {
-                    powershell 'docker logout'
-                    powershell 'docker login -u kadiraydogan -p Kadir.1442'
-                    powershell 'docker push kadiraydogan/nero'
-                }
-            }
-        }
-        stage('Stop and Remove Existing Containers') {
-            steps {
-                script {
-                    echo "Stopping and removing existing Docker containers"
-                    powershell '''
-                        # Stop all running containers
-                        $containers = docker ps -q
-                        if ($containers) {
-                            docker stop $containers
-                        } else {
-                            Write-Output "No containers to stop"
-                        }
-
-                        # Remove all containers
-                        $containers = docker ps -a -q
-                        if ($containers) {
-                            docker rm $containers
-                        } else {
-                            Write-Output "No containers to remove"
-                        }
-                    '''
+                    bat 'docker logout'
+                    bat 'docker login -u kadiraydogan -p Kadir.1442'
+                    bat 'docker push kadiraydogan/nero'
                 }
             }
         }
         stage('Run Spring Boot Container') {
             steps {
                 script {
-                    bat 'docker network create my-network'
-
-                    bat 'docker run -d --name redis --network my-network -p 6379:6379 redis'
-
-                    bat 'docker run -d --name postgres --network my-network -e POSTGRES_DB=nero_database -e POSTGRES_USER=nero_user -e POSTGRES_PASSWORD=1442 -p 5432:5432 postgres:latest'
-
-                    bat 'docker run -d --name nero-app --network my-network -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
+                    bat 'docker-compose down || echo "No containers to stop"'
+                    bat 'docker-compose up -d'
                 }
             }
         }
