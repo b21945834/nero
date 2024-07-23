@@ -84,6 +84,14 @@ public class StockController {
         return ResponseEntity.ok(new BaseResponse<>(dtos));
     }
 
+    @PostMapping("/{stockId}")
+    public ResponseEntity<BaseResponse<Void>> updateStock(@PathVariable("stockId") Long stockId, @RequestParam Integer quantity) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        stockService.updateStock(user.getId(), stockId, quantity);
+        return ResponseEntity.ok(new BaseResponse<>());
+    }
+
     @GetMapping("/{stockId}")
     public ResponseEntity<BaseResponse<Stock>> getStockDetail(@PathVariable("stockId") Long stockId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

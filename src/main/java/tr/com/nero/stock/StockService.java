@@ -1,5 +1,6 @@
 package tr.com.nero.stock;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -101,5 +102,15 @@ public class StockService {
             spec = spec.and(StockSpecification.hasPriceLessThanOrEqualTo(maxPrice));
         }
         return stockRepository.findAll(spec, pageable).getContent();
+    }
+
+    public void updateStock(Long id, Long stockId, Integer quantity) {
+        Optional<Stock> optionalStock = stockRepository.findDetailsById(id, stockId);
+        if (optionalStock.isEmpty()) {
+            throw new RuntimeException("Böyle bir stok bulunamadı: " + stockId);
+        }
+        Stock stock = optionalStock.get();
+        stock.setQuantity(quantity);
+        stockRepository.save(stock);
     }
 }

@@ -17,7 +17,6 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
 
     Page<Stock> findAll(Specification<Stock> spec, Pageable pageable);
 
-
     @Query("SELECT s FROM Stock s WHERE s.user.id = :userId AND s.id = :stockId")
     Optional<Stock> findDetailsById(@Param("userId") Long userId, @Param("stockId") Long stockId);
 
