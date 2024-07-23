@@ -53,10 +53,7 @@ pipeline {
         stage('Run Spring Boot Container') {
             steps {
                 script {
-                    bat 'docker network create my-network || echo "Network already exists"'
-
                     bat 'docker run -d --name redis --network my-network -p 6379:6379 redis'
-
                     bat 'docker run -d --name nero-app --network my-network -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
                 }
             }
