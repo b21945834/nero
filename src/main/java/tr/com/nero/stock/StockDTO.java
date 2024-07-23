@@ -18,6 +18,7 @@ public class StockDTO {
     private Long id;
     private BigDecimal price;
     private Integer quantity;
+    private String title;
     @Enumerated(EnumType.STRING)
     private Category category;
     private Long userId;

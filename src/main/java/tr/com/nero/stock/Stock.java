@@ -25,6 +25,7 @@ public class Stock {
     private Long id;
     private BigDecimal price;
     private Integer quantity;
+    private String title;
     @Enumerated(EnumType.STRING)
     private Category category;
     @ManyToOne(fetch = FetchType.LAZY)

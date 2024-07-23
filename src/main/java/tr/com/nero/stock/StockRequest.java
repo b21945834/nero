@@ -25,6 +25,9 @@ public class StockRequest {
     @NotBlank(message = "Kategori boş olamaz.")
     private String category;
 
+    @NotBlank(message = "Stok ismi boş olamaz.")
+    private String title;
+
     @NotEmpty(message = "Barkodlar boş olamaz.")
     private List<@NotBlank(message = "Barkod boş olamaz.") String> barcodes;
 

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/stock")
@@ -27,6 +29,8 @@ import java.util.Optional;
 public class StockController {
 
     private final StockService stockService;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @PostMapping("/add")
     public ResponseEntity<BaseResponse<Long>> createStock(@Valid @RequestBody StockRequest stock) {
@@ -58,16 +62,24 @@ public class StockController {
             @RequestParam Optional<Double> minPrice,
             @RequestParam Optional<Double> maxPrice,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "0") int page) {
-
+            @RequestParam(defaultValue = "0") int page
+    ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
+        StockFilterBody filters = StockFilterBody.builder().page(page).size(size).category(category.orElse(null)).minPrice(minPrice.orElse(null)).maxPrice(maxPrice.orElse(null)).userId(user.getId()).build();
+        String currentPageKey = "stocks:" + filters.hashCode();
 
-        List<String> categories = category.map(s -> Arrays.asList(s.split(","))).orElseGet(List::of);
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        List<Stock> stocks = stockService.getStocksWithFilters(user.getId(), categories, minPrice, maxPrice, pageable);
+        // Check if the current page's data is in the cache
+        List<StockDTO> cachedStocks = (List<StockDTO>) redisTemplate.opsForValue().get(currentPageKey);
+        if (cachedStocks != null) {
+            return ResponseEntity.ok(new BaseResponse<>(cachedStocks));
+        }
+
+        List<Stock> stocks = stockService.getStocksWithFilters(filters);
         List<StockDTO> dtos = new ArrayList<>();
         stocks.forEach(stock -> dtos.add(NeroMapper.INSTANCE.fromStockEntity(stock)));
+
+        cacheNextPage(filters);
 
         return ResponseEntity.ok(new BaseResponse<>(dtos));
     }
@@ -80,4 +92,21 @@ public class StockController {
         Optional<Stock> stock = stockService.getWithId(user.getId(), stockId);
         return stock.map(value -> ResponseEntity.ok(new BaseResponse<>(value))).orElseGet(() -> ResponseEntity.ok(new BaseResponse<>("Hata: Stock bulunamadı.")));
     }
+    private void cacheNextPage(StockFilterBody filters) {
+        try {
+            StockFilterBody nextPageFilters = (StockFilterBody) filters.clone();
+            nextPageFilters.setPage(filters.getPage() + 1);
+
+            List<Stock> nextPageStocks = stockService.getStocksWithFilters(nextPageFilters);
+            List<StockDTO> nextPageDtos = new ArrayList<>();
+            nextPageStocks.forEach(stock -> nextPageDtos.add(NeroMapper.INSTANCE.fromStockEntity(stock)));
+
+            // Create a key for the next page filters
+            String key = "stocks:" + nextPageFilters.hashCode();
+            redisTemplate.opsForValue().set(key, nextPageDtos, 2, TimeUnit.MINUTES);
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

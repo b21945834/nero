@@ -5,6 +5,7 @@ import org.mapstruct.factory.Mappers;
 import tr.com.nero.stock.barcode.Barcode;
 import tr.com.nero.stock.Stock;
 import tr.com.nero.stock.StockDTO;
+import tr.com.nero.user.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,5 +22,9 @@ public interface NeroMapper {
             newL.add(barcode.getBarcode());
         }
         return newL;
+    }
+
+    default Long map(User user) {
+        return user.getId();
     }
 }
