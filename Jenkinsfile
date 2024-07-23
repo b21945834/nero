@@ -4,67 +4,63 @@ pipeline {
         maven "MavenTool"
     }
     stages {
-        stage('Checkout') {
+        stage("Build Maven") {
             steps {
-                echo 'Checking out code'
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/b21945834/nero']])
-            }
-        }
-        stage('Start PostgreSQL') {
-            steps {
-                script {
-                    echo 'Starting PostgreSQL container'
-                    bat 'docker-compose up -d postgres'
-                    bat '''
-                    echo "Waiting for PostgreSQL to be ready..."
-                    while ! docker exec -it postgres pg_isready -U nero_user; do
-                      echo "PostgreSQL is not ready yet..."
-                      sleep 5
-                    done
-                    '''
-                }
-            }
-        }
-        stage('Build Maven') {
-            steps {
-                echo 'Building Maven Project'
-                bat 'mvn clean install'
+                powershell 'mvn clean install'
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo 'Building Docker Image'
-                    bat 'docker build -t kadiraydogan/nero .'
+                    powershell 'docker build -t kadiraydogan/nero .'
                 }
             }
         }
         stage('Push Docker Image') {
             steps {
                 script {
-                    echo 'Pushing Docker Image'
-                    bat 'docker logout'
-                    bat 'docker login -u kadiraydogan -p Kadir.1442'
-                    bat 'docker push kadiraydogan/nero'
+                    powershell 'docker logout'
+                    powershell 'docker login -u kadiraydogan -p Kadir.1442'
+                    powershell 'docker push kadiraydogan/nero'
                 }
             }
         }
-        stage('Run Full Docker Compose') {
+        stage('Stop and Remove Existing Containers') {
             steps {
                 script {
-                    echo 'Running Full Docker Compose'
-                    bat 'docker-compose down || echo "No containers to stop"'
-                    bat 'docker-compose up -d'
+                    echo "Stopping and removing existing Docker containers"
+                    powershell '''
+                        # Stop all running containers
+                        $containers = docker ps -q
+                        if ($containers) {
+                            docker stop $containers
+                        } else {
+                            Write-Output "No containers to stop"
+                        }
+
+                        # Remove all containers
+                        $containers = docker ps -a -q
+                        if ($containers) {
+                            docker rm $containers
+                        } else {
+                            Write-Output "No containers to remove"
+                        }
+                    '''
                 }
             }
         }
-    }
-    post {
-        always {
-            script {
-                echo 'Stopping Docker Compose'
-                bat 'docker-compose down'
+        stage('Run Spring Boot Container') {
+            steps {
+                script {
+                    bat 'docker network create my-network'
+
+                    bat 'docker run -d --name redis --network my-network -p 6379:6379 redis'
+
+                    bat 'docker run -d --name nero-app --network my-network -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
+                }
             }
         }
     }
 }
+

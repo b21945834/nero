@@ -1,19 +1,5 @@
 version: '3.8'
 services:
-  postgres:
-    image: postgres:latest
-    container_name: postgres
-    environment:
-      POSTGRES_DB: nero_database
-      POSTGRES_USER: nero_user
-      POSTGRES_PASSWORD: 1442
-    ports:
-      - "5432:5432"
-    networks:
-      - my-network
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   redis:
     image: redis:latest
     container_name: redis
@@ -30,20 +16,11 @@ services:
     environment:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nero_database
-      SPRING_DATASOURCE_USERNAME: nero_user
-      SPRING_DATASOURCE_PASSWORD: 1442
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
     networks:
       - my-network
     depends_on:
-      - postgres
       - redis
 
 networks:
   my-network:
     driver: bridge
-
-volumes:
-  postgres_data:
