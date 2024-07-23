@@ -1,6 +1,7 @@
 package tr.com.nero.common;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 import tr.com.nero.stock.barcode.Barcode;
 import tr.com.nero.stock.Stock;
@@ -14,6 +15,7 @@ import java.util.List;
 public interface NeroMapper {
     NeroMapper INSTANCE = Mappers.getMapper(NeroMapper.class);
 
+    @Mapping(source = "user.id", target = "userId")
     StockDTO fromStockEntity(Stock stock);
 
     default List<String> map(List<Barcode> value) {
