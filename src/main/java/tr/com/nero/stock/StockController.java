@@ -1,6 +1,10 @@
 package tr.com.nero.stock;
 
 import com.fasterxml.jackson.databind.ser.Serializers;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +37,17 @@ public class StockController {
     private final RedisTemplate<String, Object> redisTemplate;
 
     @PostMapping("/add")
-    public ResponseEntity<BaseResponse<Long>> createStock(@Valid @RequestBody StockRequest stock) {
+    @Operation(
+            summary = "Yeni bir stok oluşturur",
+            description = "Yeni bir stok oluşturur ve stokun ID'sini döner."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Başarıyla stok oluşturuldu"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz stok bilgileri")
+    })
+    public ResponseEntity<BaseResponse<Long>> createStock(
+            @Parameter(description = "Oluşturulacak stok bilgilerini içeren JSON nesnesi", required = true)
+            @Valid @RequestBody StockRequest stock) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
         Stock createdStock = stockService.createStock(user, stock);
@@ -41,15 +55,34 @@ public class StockController {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<BaseResponse<StockDTO>> update(@RequestParam("id") Long id, @Valid @RequestBody StockRequest stock) {
+    @Operation(
+            summary = "Var olan bir stoku günceller",
+            description = "Stok bilgilerini günceller ve güncellenmiş stok bilgilerini döner."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Başarıyla stok güncellendi"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz stok bilgileri"),
+            @ApiResponse(responseCode = "404", description = "Stok bulunamadı")
+    })
+    public ResponseEntity<BaseResponse<StockDTO>> update(
+            @Parameter(description = "Güncellenecek stokun ID'si", required = true)
+            @RequestParam("id") Long id,
+            @Parameter(description = "Güncellenmiş stok bilgilerini içeren nesnesi", required = true)
+            @Valid @RequestBody StockRequest stock) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
-        Stock createdStock = stockService.update(user, id, stock);
-        return ResponseEntity.ok(new BaseResponse<>(NeroMapper.INSTANCE.fromStockEntity(createdStock)));
+        Stock updatedStock = stockService.update(user, id, stock);
+        return ResponseEntity.ok(new BaseResponse<>(NeroMapper.INSTANCE.fromStockEntity(updatedStock)));
     }
 
     @GetMapping("/delete/{id}")
-    public ResponseEntity<BaseResponse<Void>> delete(@PathVariable Long id) {
+    @Operation(
+            summary = "Belirtilen ID'ye sahip stoku siler",
+            description = "Stoku ID'ye göre siler."
+    )
+    public ResponseEntity<BaseResponse<Void>> delete(
+            @Parameter(description = "Silinecek stokun ID'si", required = true)
+            @PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
         stockService.delete(user.getId(), id);
@@ -57,19 +90,36 @@ public class StockController {
     }
 
     @GetMapping("/list")
+    @Operation(
+            summary = "Stokları filtreler ve listeler",
+            description = "Filtreler ve stokları döner."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Başarıyla stoklar listelendi")
+    })
     public ResponseEntity<BaseResponse<List<StockDTO>>> getStocks(
+            @Parameter(description = "Stokları filtrelemek için kategori", required = false)
             @RequestParam Optional<String> category,
+            @Parameter(description = "Minimum fiyat", required = false)
             @RequestParam Optional<Double> minPrice,
+            @Parameter(description = "Maksimum fiyat", required = false)
             @RequestParam Optional<Double> maxPrice,
+            @Parameter(description = "Sayfadaki stok sayısı", example = "10", required = false)
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "0") int page
-    ) {
+            @Parameter(description = "Getirilecek sayfa numarası", example = "0", required = false)
+            @RequestParam(defaultValue = "0") int page) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
-        StockFilterBody filters = StockFilterBody.builder().page(page).size(size).category(category.orElse(null)).minPrice(minPrice.orElse(null)).maxPrice(maxPrice.orElse(null)).userId(user.getId()).build();
+        StockFilterBody filters = StockFilterBody.builder()
+                .page(page)
+                .size(size)
+                .category(category.orElse(null))
+                .minPrice(minPrice.orElse(null))
+                .maxPrice(maxPrice.orElse(null))
+                .userId(user.getId())
+                .build();
         String currentPageKey = "stocks:" + filters.hashCode();
 
-        // Check if the current page's data is in the cache
         List<StockDTO> cachedStocks = (List<StockDTO>) redisTemplate.opsForValue().get(currentPageKey);
         if (cachedStocks != null) {
             return ResponseEntity.ok(new BaseResponse<>(cachedStocks));
@@ -85,7 +135,19 @@ public class StockController {
     }
 
     @PostMapping("/{stockId}")
-    public ResponseEntity<BaseResponse<Void>> updateStock(@PathVariable("stockId") Long stockId, @RequestParam Integer quantity) {
+    @Operation(
+            summary = "Stok miktarını günceller",
+            description = "Belirtilen stok ID'sinin miktarını günceller."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Başarıyla stok miktarı güncellendi"),
+            @ApiResponse(responseCode = "404", description = "Stok bulunamadı")
+    })
+    public ResponseEntity<BaseResponse<Void>> updateStock(
+            @Parameter(description = "Güncellenecek stokun ID'si", required = true)
+            @PathVariable("stockId") Long stockId,
+            @Parameter(description = "Yeni stok miktarı", required = true)
+            @RequestParam Integer quantity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
         stockService.updateStock(user.getId(), stockId, quantity);
@@ -93,13 +155,25 @@ public class StockController {
     }
 
     @GetMapping("/{stockId}")
-    public ResponseEntity<BaseResponse<Stock>> getStockDetail(@PathVariable("stockId") Long stockId) {
+    @Operation(
+            summary = "Stok detaylarını getirir",
+            description = "Belirtilen stok ID'sine sahip stokun detaylarını döner."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Başarıyla stok detayları döner"),
+            @ApiResponse(responseCode = "404", description = "Stok bulunamadı")
+    })
+    public ResponseEntity<BaseResponse<Stock>> getStockDetail(
+            @Parameter(description = "Detayları getirilecek stokun ID'si", required = true)
+            @PathVariable("stockId") Long stockId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
 
         Optional<Stock> stock = stockService.getWithId(user.getId(), stockId);
-        return stock.map(value -> ResponseEntity.ok(new BaseResponse<>(value))).orElseGet(() -> ResponseEntity.ok(new BaseResponse<>("Hata: Stock bulunamadı.")));
+        return stock.map(value -> ResponseEntity.ok(new BaseResponse<>(value)))
+                .orElseGet(() -> ResponseEntity.ok(new BaseResponse<>("Hata: Stok bulunamadı.")));
     }
+
     private void cacheNextPage(StockFilterBody filters) {
         try {
             StockFilterBody nextPageFilters = (StockFilterBody) filters.clone();
