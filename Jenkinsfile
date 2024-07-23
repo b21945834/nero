@@ -6,6 +6,7 @@ pipeline {
     stages {
         stage("Build Maven") {
             steps {
+                echo 'asdsdadas'
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/b21945834/nero']])
                 powershell 'mvn clean install'
             }
