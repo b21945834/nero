@@ -1,27 +1,32 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - app-network
-
   app:
     image: kadiraydogan/nero:latest
     container_name: nero-app
     ports:
-      - "9090:8080"
+      - '9090:8080'
     environment:
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
-    depends_on:
-      - redis
     networks:
-      - app-network
+      - local-network
+
+  redis:
+    image: redis/redis-stack-server:7.2.0-v6
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "ping" ]
+    volumes:
+      - redis_data:/data
+    networks:
+      - local-network
+
+volumes:
+  redis_data:
 
 networks:
-  app-network:
+  local-network:
     driver: bridge
