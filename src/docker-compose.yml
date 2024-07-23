@@ -7,7 +7,7 @@ services:
     ports:
       - '9090:8080'
     environment:
-      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_HOST=localhost
       - SPRING_REDIS_PORT=6379
     networks:
       - local-network
