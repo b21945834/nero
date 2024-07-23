@@ -29,7 +29,7 @@ pipeline {
         stage('Stop Existing Redis Container') {
             steps {
                 script {
-                    def redisContainer = bat(script: 'docker ps -q -f "name=redis"', returnStdout: true).trim()
+                    def redisContainer = bat(script: 'docker container ls --all --quiet --filter "name=redis"', returnStdout: true).trim()
                     if (redisContainer) {
                         echo "Stopping existing Redis container"
                         bat "docker stop ${redisContainer}"
@@ -49,9 +49,9 @@ pipeline {
         stage('Stop Existing Spring Boot Container') {
             steps {
                 script {
-                    def appContainer = bat(script: 'docker ps -q -f "name=nero-app"', returnStdout: true).trim()
+                    def appContainer = bat(script: 'docker container ls --all --quiet --filter "name=nero-app"', returnStdout: true).trim()
                     if (appContainer) {
-                        echo "Stopping existing Redis container"
+                        echo "Stopping existing app container"
                         bat "docker stop ${appContainer}"
                         bat "docker rm ${appContainer}"
                     }
