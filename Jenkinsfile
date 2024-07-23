@@ -54,13 +54,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Redis container"
-                    powershell '''
-                        Try {
-                            docker run -d --name redis -p 6379:6379 redis
-                        } Catch {
-                            Write-Output "Redis container already running or error occurred"
-                        }
-                    '''
+                    bat 'docker run -d --name redis -p 6379:6379 redis'
                 }
             }
         }
@@ -68,13 +62,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Spring Boot container"
-                    powershell '''
-                        Try {
-                            docker run -d --name nero-app -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest
-                        } Catch {
-                            Write-Output "Spring Boot container already running or error occurred"
-                        }
-                    '''
+                    bat 'docker run -d --name nero-app -e SPRING_REDIS_HOST=192.168.1.104 -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
                 }
             }
         }
