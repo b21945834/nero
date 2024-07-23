@@ -29,9 +29,8 @@ pipeline {
         stage('Run Redis and Spring Boot Containers') {
             steps {
                 script {
-                    bat 'docker rm -f redis || echo "Redis yok"'
-                    bat 'docker run -d --name redis -p 6379:6379 redis'
-                    bat 'docker run -d --name spring-boot-app -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
+                    bat 'docker run -d -p 6379:6379 redis'
+                    bat 'docker run -d -e SPRING_REDIS_HOST=redis -e SPRING_REDIS_PORT=6379 -p 9090:8080 kadiraydogan/nero:latest'
                 }
             }
         }
