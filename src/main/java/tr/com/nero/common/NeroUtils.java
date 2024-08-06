@@ -14,7 +14,7 @@ public class NeroUtils {
             return null;
         }
         try {
-            return Category.valueOf(str.toUpperCase(Locale.ENGLISH));
+            return Category.valueOf(str.trim().toUpperCase(Locale.ENGLISH));
         }
         catch (IllegalArgumentException e) {
             e.printStackTrace();
